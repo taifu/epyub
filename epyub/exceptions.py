@@ -20,3 +20,7 @@ class ElementNotInSpine(Exception):
     "The element doesn't exist in spine"
     pass
 
+class PreviewAlreadyExists(Exception):
+    "Preview filename already exists"
+    pass
+

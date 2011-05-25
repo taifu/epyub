@@ -33,5 +33,9 @@ class EpubTest(unittest.TestCase):
 
     def testEpubPreview(self):
         book = Epub(self.epub)
+        if os.path.exists(self.preview_epub):
+            os.remove(self.preview_epub)
         new_book = book.create_preview(self.preview_epub, self.spine[0:2])
-        #self.assertEqual(book.content.spine, self.spine)
+        #TODO check preview
+        # Remove file
+        #os.remove(self.preview_epub)

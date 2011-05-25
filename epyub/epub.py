@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os.path
 from zipfile import ZipFile
 from exceptions import *
 import xml.dom.minidom
@@ -21,7 +22,7 @@ class Content(object):
         if len(spine_list) == 0:
             raise SpineMissing()
         elif len(spine_list) != 1:
-            raise MoreThanOneSpine()
+            raise MoreThanOneSpine("{0} spines".format(len(spine_list)))
         self.spine = tuple(node.getAttribute("idref")
                 for node in spine_list[0].getElementsByTagName("itemref"))
 
@@ -59,17 +60,33 @@ class Epub(object):
         name = self.zip_get_name(TOC_NAME)
         if name:
             return name
-        raise TocFileNotFound
+        raise TocFileNotFound(name)
 
     @property
     def content_filename(self):
         name = self.zip_get_name(CONTENT_NAME)
         if name:
             return name
-        raise ContentFileNotFound
+        raise ContentFileNotFound(name)
 
-    def create_preview(self, filename, spine):
+    def create_preview(self, filename, spine, missing_page=None, overwrite=False):
+        """ Create a preview, writing filename, with only spine elements,
+        with an optional missing_page for missing links and return an ePub """
         for item in spine:
             if not item in self.content.spine:
                 raise ElementNotInSpine(item)
-        #TODO
+        # Check filename
+        if os.path.exists(filename) and not overwrite:
+            raise PreviewAlreadyExists(filename)
+        # First loop
+        for name in self._zipfile.filelist:
+            data = self._zipfile.read(name)
+            # TODO
+            # harvest links
+        zip_out = ZipFile(filename, mode='w')
+        for name in self._zipfile.filelist:
+            data = self._zipfile.read(name)
+            # TODO
+            # check in in spine
+            zip_out.writestr(name, data)
+        zip_out.close()
