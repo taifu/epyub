@@ -16,6 +16,14 @@ class MoreThanOneSpine(Exception):
     "The container contains more than one spine element"
     pass
 
+class ManifestMissing(Exception):
+    "The container doesn't contain a manifest element"
+    pass
+
+class MoreThanOneManifest(Exception):
+    "The container contains more than one manifest element"
+    pass
+
 class ElementNotInSpine(Exception):
     "The element doesn't exist in spine"
     pass

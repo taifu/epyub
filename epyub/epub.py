@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import os.path
+import re
 from zipfile import ZipFile
-from exceptions import *
 import xml.dom.minidom
+
+from epyub.exceptions import *
 
 TOC_NAME = "toc.ncx"
 CONTENT_NAME = "content.opf"
@@ -25,6 +27,15 @@ class Content(object):
             raise MoreThanOneSpine("{0} spines".format(len(spine_list)))
         self.spine = tuple(node.getAttribute("idref")
                 for node in spine_list[0].getElementsByTagName("itemref"))
+        # Manifest
+        manifest_list = self._dom.getElementsByTagName("manifest")
+        if len(manifest_list) == 0:
+            raise ManifestMissing()
+        elif len(manifest_list) != 1:
+            raise MoreThanOneManifest("{0} manifests".format(len(manifest_list)))
+        self.manifest = dict(
+                (node.getAttribute("id"), node.getAttribute("href"))
+                for node in manifest_list[0].getElementsByTagName("item"))
 
 class Epub(object):
     def __init__(self, filename=None):
@@ -81,8 +92,15 @@ class Epub(object):
         # First loop
         for name in self._zipfile.filelist:
             data = self._zipfile.read(name)
+            # href
+            for match in re.finditer(r"<a (.* )?href=\"\", data):
+                print match
+                import pdb;pdb.set_trace()
+            #print name, dir(name), len(data)
+            #import pdb;pdb.set_trace()
             # TODO
             # harvest links
+        #http://stackoverflow.com/questions/4890860/make-in-memory-copy-of-a-zip-by-iterrating-over-each-file-of-the-input
         zip_out = ZipFile(filename, mode='w')
         for name in self._zipfile.filelist:
             data = self._zipfile.read(name)
