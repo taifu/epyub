@@ -4,7 +4,7 @@ import os.path
 from urlparse import urlparse
 from zipfile import ZipFile
 import xml.dom.minidom
-from sgmllib import SGMLParser
+from HTMLParser import HTMLParser
 from collections import deque
 import epyub.exceptions as epexc
 
@@ -94,29 +94,31 @@ class Ncx(object):
     def __init__(self, data):
         self._dom = xml.dom.minidom.parseString(data)
 
-class URLLister(SGMLParser):
+def absolutize_url(url, parent_path_parts):
+    p = urlparse(url)
+    # Not an absolute path
+    if not p.scheme:
+        parts = parent_path_parts[:] + p.path.split("/") # Get a copy!
+        while "." in parts:
+            parts.pop(parts.index("."))
+        while ".." in parts[1:]:
+            i = parts.index("..")
+            parts[i-1:i+1] = []
+        return "/".join(parts)
+    return url
+
+class URLLister(HTMLParser):
     def __init__(self, parent_path, *args, **kwargs):
         self.parent_path_parts = parent_path.split("/")[:-1]
         #SGMLParser is an old style classe
-        SGMLParser.__init__(self, *args, **kwargs)
+        HTMLParser.__init__(self, *args, **kwargs)
 
-    """ Used to harvers URL from files """
     def reset(self):
-        SGMLParser.reset(self)
+        HTMLParser.reset(self)
         self.urls = set()
 
     def absolutize(self, url):
-        p = urlparse(url)
-        # Not an absolute path
-        if not p.scheme:
-            parts = self.parent_path_parts[:] + p.path.split("/") # Get a copy!
-            while "." in parts:
-                parts.pop(parts.index("."))
-            while ".." in parts[1:]:
-                i = parts.index("..")
-                parts[i-1:i+1] = []
-            return "/".join(parts)
-        return url
+        return absolutize_url(url, self.parent_path_parts)
 
     def harvest(self, attrs, attribute):
         attributes = [v for k, v in attrs if k==attribute]
@@ -124,17 +126,11 @@ class URLLister(SGMLParser):
             url = self.absolutize(attributes[0])
             self.urls.add(url)
 
-    def start_content(self, attrs):
-        self.harvest(attrs, 'src')
-
-    def start_link(self, attrs):
-        self.harvest(attrs, 'href')
-
-    def start_img(self, attrs):
-        self.harvest(attrs, 'src')
-
-    def start_a(self, attrs):
-        self.harvest(attrs, 'href')
+    def handle_starttag(self, tag, attrs):
+        if tag in ("content", "img"):
+            self.harvest(attrs, 'src')
+        elif tag in ("link", "a"):
+            self.harvest(attrs, 'href')
 
 class Epub(object):
     def __init__(self, filename=None):
@@ -227,16 +223,41 @@ class Epub(object):
             if not item.url in used_urls:
                 urls_to_be_removed.add(item.url)
 
-        #http://stackoverflow.com/questions/4890860/make-in-memory-copy-of-a-zip-by-iterrating-over-each-file-of-the-input
-
+        # Write preview epub
         zip_out = ZipFile(preview_filename, mode='w')
         for name in self._zipfile.infolist():
             url = name.filename
             if not url in urls_to_be_removed:
                 data = self._zipfile.read(name)
-                if url in self.content.manifest:
+                if url in self.content.urls_by_id:
                     item = self.content.manifest[self.content.urls_by_id[url]]
-                    if item.parsable():
-                        pass
+                    parent_path_parts = url.split("/")[:-1]
+                    if item == self.content.ncx_item:
+                        # Process toc
+                        dom = xml.dom.minidom.parseString(data)
+                        for navPoint in dom.getElementsByTagName("navPoint"):
+                            for node in navPoint.childNodes:
+                                if node.nodeType == node.ELEMENT_NODE and node.nodeName == "content":
+                                    url = absolutize_url(node.getAttribute("src"), parent_path_parts)
+                                    if url in urls_to_be_removed:
+                                        try:
+                                            navPoint.parentNode.removeChild(navPoint)
+                                        except xml.dom.NotFoundErr:
+                                            pass
+                        data = dom.toxml(dom.encoding)
+                    elif item.parsable():
+                        # Process generic html/xml
+                        dom = xml.dom.minidom.parseString(data)
+                        parent_path_parts = url.split("/")[:-1]
+                        for tagname, attr in (("content", "src"), ("img", "src"), ("link", "href"), ("a", "href")):
+                            for node in dom.getElementsByTagName(tagname):
+                                if node.nodeType == node.ELEMENT_NODE:
+                                    url = absolutize_url(node.getAttribute(attr), parent_path_parts)
+                                    if url in urls_to_be_removed:
+                                        try:
+                                            node.parentNode.removeChild(node)
+                                        except xml.dom.NotFoundErr:
+                                            pass
+                        data = dom.toxml(dom.encoding)
                 zip_out.writestr(name, data)
         zip_out.close()
