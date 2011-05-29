@@ -17,6 +17,7 @@ class EpubTest(unittest.TestCase):
              "Section0005.xhtml",
              "Section0006.xhtml",
              )
+    metadata_content_urls = set(["OEBPS/toc.ncx", "OEBPS/Images/copertina.png"])
     manifest_keys = set([
             "ncx", "copertina.png", "e-text.png", "Style0001.css",
             "Section0001.xhtml", "Section0002.xhtml", "Section0003.xhtml",
@@ -27,13 +28,11 @@ class EpubTest(unittest.TestCase):
         book = Epub(self.epub)
         self.assertTrue(isinstance(book.zipfile, ZipFile))
 
-    def testEpubSpine(self):
+    def testEpubContent(self):
         book = Epub(self.epub)
         self.assertEqual(book.content.spine, self.spine)
-
-    def testEpubManifest(self):
-        book = Epub(self.epub)
         self.assertEqual(set(book.content.manifest.keys()), self.manifest_keys)
+        self.assertEqual(book.content.metadata_content_urls, self.metadata_content_urls)
 
     def testEpubWrongPreview(self):
         from epyub.exceptions import ElementNotInSpine
@@ -44,7 +43,7 @@ class EpubTest(unittest.TestCase):
         book = Epub(self.epub)
         if os.path.exists(self.preview_epub):
             os.remove(self.preview_epub)
-        new_book = book.create_preview(self.preview_epub, self.spine[0:2])
+        new_book = book.create_preview(self.preview_epub, self.spine[2:4])
         #TODO check preview
         # Remove file
         #os.remove(self.preview_epub)

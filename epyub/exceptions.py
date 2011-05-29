@@ -1,27 +1,47 @@
 # -*- coding: utf-8 -*-
 
-class TocFileNotFound(Exception):
-    "The epub doesn't contain a toc file"
+class ContainerFileNotFound(Exception):
+    "The epub doesn't contain a container file"
     pass
 
 class ContentFileNotFound(Exception):
     "The epub doesn't contain a content file"
     pass
 
+class NcxFileNotFound(Exception):
+    "The epub doesn't contain a ncx file"
+    pass
+
+class RootfilesMissing(Exception):
+    "The container doesn't contain a rootfiles element"
+    pass
+
+class MoreThanOneRootfiles(Exception):
+    "The container contains more than one rootfiles element"
+    pass
+
+class RootfileMissing(Exception):
+    "The rootfiles node doesn't contain a OEBPS rootfile element"
+    pass
+
+class MetadataMissing(Exception):
+    "The content doesn't contain a metadata element"
+    pass
+
 class SpineMissing(Exception):
-    "The container doesn't contain a spine element"
+    "The content doesn't contain a spine element"
     pass
 
 class MoreThanOneSpine(Exception):
-    "The container contains more than one spine element"
+    "The content contains more than one spine element"
     pass
 
 class ManifestMissing(Exception):
-    "The container doesn't contain a manifest element"
+    "The content doesn't contain a manifest element"
     pass
 
 class MoreThanOneManifest(Exception):
-    "The container contains more than one manifest element"
+    "The content contains more than one manifest element"
     pass
 
 class ElementNotInSpine(Exception):

@@ -22,11 +22,19 @@ def main(verbosity):
     unittest.TextTestRunner(verbosity=verbosity).run(suite)
 
 if __name__ == "__main__":
-    import argparse
+    description = 'Run epyub test suite'
+    verbosity_args = ('-v', '--verbosity')
+    verbosity_kwargs = {'dest': 'verbosity', 'type':'int',
+            'help': 'verbosity', 'default': 1}
+    try:
+        import argparse
+        parser = argparse.ArgumentParser(description=description)
+        parser.add_argument(*verbosity_args, **verbosity_kwargs)
+        options = parser.parse_args()
+    except ImportError:
+        import optparse
+        parser = optparse.OptionParser(description=description)
+        parser.add_option(*verbosity_args, **verbosity_kwargs)
+        (options, args) = parser.parse_args()
 
-    parser = argparse.ArgumentParser(description='Run epyub test suite')
-    parser.add_argument('-v', '--verbosity', dest='verbosity', type=int,
-                   help='verbosity', default=1)
-
-    args = parser.parse_args()
-    main(verbosity=args.verbosity)
+    main(verbosity=options.verbosity)
