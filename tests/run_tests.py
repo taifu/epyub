@@ -24,8 +24,8 @@ def main(verbosity):
 if __name__ == "__main__":
     description = 'Run epyub test suite'
     verbosity_args = ('-v', '--verbosity')
-    verbosity_kwargs = {'dest': 'verbosity', 'type':'int',
-            'help': 'verbosity', 'default': 1}
+    verbosity_kwargs = {'dest': 'verbosity', 'type':int,
+            'help': 'verbosity', 'default': '1'}
     try:
         import argparse
         parser = argparse.ArgumentParser(description=description)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os.path
+import copy
 from urlparse import urlparse
 from zipfile import ZipFile
 import xml.dom.minidom
@@ -227,11 +228,30 @@ class Epub(object):
         zip_out = ZipFile(preview_filename, mode='w')
         for name in self._zipfile.infolist():
             url = name.filename
-            if not url in urls_to_be_removed:
+            parent_path_parts = url.split("/")[:-1]
+            if (not url in urls_to_be_removed) or url == self.content_filename:
                 data = self._zipfile.read(name)
-                if url in self.content.urls_by_id:
+                if url == self.content_filename:
+                    dom = xml.dom.minidom.parseString(data)
+                    # Process content manifest
+                    for item in dom.getElementsByTagName("manifest")[0].getElementsByTagName("item"):
+                        url = absolutize_url(item.getAttribute("href"), parent_path_parts)
+                        if url in urls_to_be_removed:
+                            try:
+                                item.parentNode.removeChild(item)
+                            except xml.dom.NotFoundErr:
+                                pass
+                    # Process content spine
+                    for itemref in dom.getElementsByTagName("spine")[0].getElementsByTagName("itemref"):
+                        url = self.content.manifest[itemref.getAttribute("idref")].url
+                        if url in urls_to_be_removed:
+                            try:
+                                itemref.parentNode.removeChild(itemref)
+                            except xml.dom.NotFoundErr:
+                                pass
+                    data = dom.toxml(dom.encoding)
+                elif url in self.content.urls_by_id:
                     item = self.content.manifest[self.content.urls_by_id[url]]
-                    parent_path_parts = url.split("/")[:-1]
                     if item == self.content.ncx_item:
                         # Process toc
                         dom = xml.dom.minidom.parseString(data)
@@ -244,6 +264,10 @@ class Epub(object):
                                             navPoint.parentNode.removeChild(navPoint)
                                         except xml.dom.NotFoundErr:
                                             pass
+                        for cont, navPoint in enumerate(dom.getElementsByTagName("navPoint")):
+                            playOrder = navPoint.getAttribute("playOrder")
+                            if playOrder != str(cont + 1):
+                                playOrder = navPoint.setAttribute("playOrder", str(cont + 1))
                         data = dom.toxml(dom.encoding)
                     elif item.parsable():
                         # Process generic html/xml
@@ -259,5 +283,5 @@ class Epub(object):
                                         except xml.dom.NotFoundErr:
                                             pass
                         data = dom.toxml(dom.encoding)
-                zip_out.writestr(name, data)
+                zip_out.writestr(copy.deepcopy(name), data)
         zip_out.close()

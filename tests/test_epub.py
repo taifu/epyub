@@ -72,11 +72,7 @@ class EpubTest(unittest.TestCase):
             os.remove(self.preview_epub)
         new_book = book.create_preview(self.preview_epub, self.spine[2:4])
 
-        book = Epub(self.epub)
         book.create_preview("andersen_1.epub", book.content.spine[:3], overwrite=True)
-        #book.create_preview("andersen_1.epub", self.spine[:3]
-
-        book = Epub(self.epub)
         book.create_preview("andersen_2.epub", [self.spine[0], self.spine[2], self.spine[4], self.spine[5]], overwrite=True)
 
         #TODO check preview
