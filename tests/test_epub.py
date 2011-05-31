@@ -70,11 +70,24 @@ class EpubTest(unittest.TestCase):
         book = Epub(self.epub)
         if os.path.exists(self.preview_epub):
             os.remove(self.preview_epub)
-        new_book = book.create_preview(self.preview_epub, self.spine[2:4])
+        preview_spine = self.spine[2:4]
+        book.create_preview(self.preview_epub, preview_spine)
+        preview_book = Epub(self.preview_epub)
+        self.assertEqual(tuple(name.filename for name in preview_book.zipfile.infolist()),
+                ('mimetype', 'META-INF/container.xml', 'OEBPS/content.opf', 'OEBPS/toc.ncx',
+                 'OEBPS/Images/copertina.png', 'OEBPS/Styles/Style0001.css',
+                 'OEBPS/Text/Section0003.xhtml', 'OEBPS/Text/Section0004.xhtml',))
+        self.assertEqual(preview_book.content.spine, preview_spine)
+        self.assertEqual(set(preview_book.content.manifest.keys()), set([
+            u'ncx', u'Section0004.xhtml', u'Section0003.xhtml', u'Style0001.css', u'copertina.png']))
+        self.assertEqual(preview_book.content.metadata_content_urls, set([
+            u'OEBPS/toc.ncx', u'OEBPS/Images/copertina.png']))
+        self.assertEqual(preview_book.urls_used_into_id, {
+            u'ncx': set(['OEBPS/Text/Section0004.xhtml', 'OEBPS/Text/Section0003.xhtml']),
+            u'Section0004.xhtml': set(['OEBPS/Styles/Style0001.css']),
+            u'Section0003.xhtml': set(['OEBPS/Styles/Style0001.css']),
+            u'Style0001.css': set([]), u'copertina.png': set([])})
+        os.remove(self.preview_epub)
+        #book.create_preview("andersen_1.epub", book.content.spine[:3], overwrite=True)
+        #book.create_preview("andersen_2.epub", [self.spine[0], self.spine[2], self.spine[4], self.spine[5]], overwrite=True)
 
-        book.create_preview("andersen_1.epub", book.content.spine[:3], overwrite=True)
-        book.create_preview("andersen_2.epub", [self.spine[0], self.spine[2], self.spine[4], self.spine[5]], overwrite=True)
-
-        #TODO check preview
-        # Remove file
-        #os.remove(self.preview_epub)
