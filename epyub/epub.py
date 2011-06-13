@@ -229,7 +229,14 @@ class Epub(object):
         for name in self._zipfile.infolist():
             url = name.filename
             parent_path_parts = url.split("/")[:-1]
-            if (not url in urls_to_be_removed) or url == self.content_filename:
+            insert_file = False
+            if (not url in urls_to_be_removed):
+                print url, (self.content_filename, CONTAINER_NAME, MIMETYPE_NAME)
+                if url in (self.content_filename, CONTAINER_NAME, MIMETYPE_NAME):
+                    insert_file = True
+                elif url in self.content.urls_by_id:
+                    insert_file = True
+            if insert_file:
                 data = self._zipfile.read(name)
                 if url == self.content_filename:
                     dom = xml.dom.minidom.parseString(data)
