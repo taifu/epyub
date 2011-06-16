@@ -17,6 +17,65 @@ class EpubTest(unittest.TestCase):
              "Section0005.xhtml",
              "Section0006.xhtml",
              )
+    html_toc = u"""<ul class="toc">
+  <li>Copertina</li>
+  <li>Informazioni</li>
+  <li>GIOSUE CARDUCCI ALLA TRADUTTRICE</li>
+  <li>H. C. ANDERSEN</li>
+  <ul>
+    <li>I.</li>
+    <ul>
+      <li>TESTA - DI - PIPA E TESTA SODA</li>
+    </ul>
+    <li>II.</li>
+  </ul>
+  <li>FONTI</li>
+  <li>NOVELLE</li>
+  <ul>
+    <li>IL BRUTTO ANITROCCOLO</li>
+    <li>I VESTITI NUOVI DELL'IMPERATORE</li>
+    <li>STORIA DI UNA MAMMA</li>
+    <li>L'ACCIARINO</li>
+    <li>LA MARGHERITINA</li>
+    <li>LA CHIOCCIOLA E IL ROSAIO</li>
+    <li>L'INTREPIDO SOLDATINO DI STAGNO</li>
+    <li>LA SIRENETTA</li>
+    <li>LA PICCINA DEI FIAMMIFERI</li>
+    <li>L'ABETE</li>
+    <li>L'AGO</li>
+    <li>L'USIGNUOLO</li>
+    <li>I PROMESSI SPOSI</li>
+    <li>CECCHINO E CECCONE</li>
+    <li>POLLICINA</li>
+    <li>GALLETTO MASSARO E GALLETTO BANDERUOLA</li>
+    <li>LA PRINCIPESSINA SUL PISELLO</li>
+    <li>IL GUARDIANO DI PORCI</li>
+    <li>IL RAGAZZACCIO</li>
+    <li>QUEL CHE FA IL BABBO È SEMPRE BEN FATTO</li>
+    <li>IL MONTE DEGLI ELFI</li>
+    <li>L'ANGELO</li>
+    <li>LE CORSE</li>
+    <li>LA NONNA</li>
+    <li>PENNA E CALAMAIO</li>
+    <li>L'ULTIMA PERLA</li>
+    <li>NEI MARI ESTREMI</li>
+    <li>LA GARA DI SALTO</li>
+    <li>IL LINO</li>
+    <li>LA VECCHIA CASA</li>
+    <li>CINQUE IN UN BACCELLO</li>
+    <li>IL FOLLETTO SERRALOCCHI</li>
+    <li>IL GORGO DELLA CAMPANA</li>
+    <li>C'È DIFFERENZA</li>
+    <li>L'OMBRA</li>
+    <li>IL PICCOLO TUK</li>
+    <li>«VERO VERISSIMO!»</li>
+    <li>LA DILIGENZA DA DODICI POSTI</li>
+    <li>IL VECCHIO FANALE</li>
+    <li>IL ROSPO</li>
+  </ul>
+  <li>Note</li>
+</ul>
+"""
     metadata_content_urls = set(["OEBPS/toc.ncx", "OEBPS/Images/copertina.png"])
     manifest_keys = set([
             "ncx", "copertina.png", "e-text.png", "Style0001.css",
@@ -87,7 +146,9 @@ class EpubTest(unittest.TestCase):
             u'Section0004.xhtml': set(['OEBPS/Styles/Style0001.css']),
             u'Section0003.xhtml': set(['OEBPS/Styles/Style0001.css']),
             u'Style0001.css': set([]), u'copertina.png': set([])})
+        del preview_book
         os.remove(self.preview_epub)
-        #book.create_preview("andersen_1.epub", book.content.spine[:3], overwrite=True)
-        #book.create_preview("andersen_2.epub", [self.spine[0], self.spine[2], self.spine[4], self.spine[5]], overwrite=True)
 
+    def testEpubEtichette(self):
+        book = Epub(self.epub)
+        self.assertEqual(book.ncx.html_toc, self.html_toc)

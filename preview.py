@@ -2,7 +2,6 @@
 
 from epyub.epub import Epub
 
-
 mahler = Epub("../epub/9788865760277.epub")
 miyazaki = Epub("../epub/9788881249329.epub")
 america = Epub("../epub/9788865060179.epub")
@@ -20,3 +19,5 @@ miyazaki.create_preview("../epub/miyazaki_preview.epub", [
 america.create_preview("../epub/america_preview.epub", [
         "cover", "frontmatter1", "title", "copy", "frontmatter2", "frontmatter3", "frontmatter4", "frontmatter5", "image1", "image1a", "chapter1", "backmatter1", "backmatter2",
         ], overwrite=True)
+
+file("../epub/mahler.html", "w").write(mahler.ncx.html_toc.encode("utf-8"))

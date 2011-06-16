@@ -2,6 +2,7 @@
 
 import os.path
 import copy
+import types
 from urlparse import urlparse
 from zipfile import ZipFile
 import xml.dom.minidom
@@ -94,6 +95,45 @@ class Ncx(object):
     """ Table of content file ( usually OEBPS/toc.ncx ) """
     def __init__(self, data):
         self._dom = xml.dom.minidom.parseString(data)
+        # Get hierarchical toc in a list of element and/or list etc.
+        def get_text(navPoint):
+            return navPoint.getElementsByTagName("navLabel")[0
+                    ].getElementsByTagName("text")[0
+                    ].childNodes[0].wholeText
+        def get_navpoints(father):
+            return [element for element in father.childNodes
+                    if element.nodeType==element.ELEMENT_NODE and element.tagName=="navPoint"]
+        toc_nodes = get_navpoints(self._dom.getElementsByTagName("navMap")[0])
+        self._toc = [get_text(navpoint) for navpoint in toc_nodes]
+        labels = deque([(toc_nodes, self._toc)])
+        while labels:
+            current_label, current_toc = labels.popleft()
+            delta = 0
+            for i, node in enumerate(current_label):
+                sons = get_navpoints(node)
+                if sons:
+                    current_label[i] = sons
+                    current_toc.insert(i + delta + 1, [get_text(navpoint) for navpoint in sons])
+                    labels.append((current_label[i], current_toc[i + delta + 1]))
+                    delta += 1
+
+    @property
+    def toc(self):
+        return self._toc
+
+    @property
+    def html_toc(self):
+        def explore(labels, level=0):
+            indent = level * u"  "
+            html = indent + u"<ul{0}>\n".format(u"" if level > 0 else u" class=\"toc\"")
+            for label in labels:
+                if type(label) == types.ListType:
+                    html += explore(label, level+1)
+                else:
+                    html += u"{0}<li>{1}</li>\n".format(indent + u"  ", label)
+            html += indent + u"</ul>\n"
+            return html
+        return explore(self.toc)
 
 def absolutize_url(url, parent_path_parts):
     p = urlparse(url)
@@ -231,7 +271,6 @@ class Epub(object):
             parent_path_parts = url.split("/")[:-1]
             insert_file = False
             if (not url in urls_to_be_removed):
-                print url, (self.content_filename, CONTAINER_NAME, MIMETYPE_NAME)
                 if url in (self.content_filename, CONTAINER_NAME, MIMETYPE_NAME):
                     insert_file = True
                 elif url in self.content.urls_by_id:
