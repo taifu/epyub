@@ -76,6 +76,65 @@ class EpubTest(unittest.TestCase):
   <li>Note</li>
 </ul>
 """
+    html_href_toc = u"""<ul class="toc">
+  <li><a href="Text/Section0001.xhtml">Copertina</a></li>
+  <li><a href="Text/Section0002.xhtml">Informazioni</a></li>
+  <li><a href="Text/Section0003.xhtml">GIOSUE CARDUCCI ALLA TRADUTTRICE</a></li>
+  <li><a href="Text/Section0003.xhtml#heading_id_3">H. C. ANDERSEN</a></li>
+  <ul>
+    <li><a href="Text/Section0003.xhtml#heading_id_4">I.</a></li>
+    <ul>
+      <li><a href="Text/Section0003.xhtml#heading_id_5">TESTA - DI - PIPA E TESTA SODA</a></li>
+    </ul>
+    <li><a href="Text/Section0003.xhtml#heading_id_6">II.</a></li>
+  </ul>
+  <li><a href="Text/Section0003.xhtml#heading_id_7">FONTI</a></li>
+  <li><a href="Text/Section0004.xhtml">NOVELLE</a></li>
+  <ul>
+    <li><a href="Text/Section0004.xhtml#heading_id_9">IL BRUTTO ANITROCCOLO</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_10">I VESTITI NUOVI DELL'IMPERATORE</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_11">STORIA DI UNA MAMMA</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_12">L'ACCIARINO</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_13">LA MARGHERITINA</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_14">LA CHIOCCIOLA E IL ROSAIO</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_15">L'INTREPIDO SOLDATINO DI STAGNO</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_16">LA SIRENETTA</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_17">LA PICCINA DEI FIAMMIFERI</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_18">L'ABETE</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_19">L'AGO</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_20">L'USIGNUOLO</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_21">I PROMESSI SPOSI</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_22">CECCHINO E CECCONE</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_23">POLLICINA</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_24">GALLETTO MASSARO E GALLETTO BANDERUOLA</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_25">LA PRINCIPESSINA SUL PISELLO</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_26">IL GUARDIANO DI PORCI</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_27">IL RAGAZZACCIO</a></li>
+    <li><a href="Text/Section0004.xhtml#heading_id_28">QUEL CHE FA IL BABBO È SEMPRE BEN FATTO</a></li>
+    <li><a href="Text/Section0005.xhtml">IL MONTE DEGLI ELFI</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_30">L'ANGELO</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_31">LE CORSE</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_32">LA NONNA</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_33">PENNA E CALAMAIO</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_34">L'ULTIMA PERLA</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_35">NEI MARI ESTREMI</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_36">LA GARA DI SALTO</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_37">IL LINO</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_38">LA VECCHIA CASA</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_39">CINQUE IN UN BACCELLO</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_40">IL FOLLETTO SERRALOCCHI</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_41">IL GORGO DELLA CAMPANA</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_42">C'È DIFFERENZA</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_43">L'OMBRA</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_44">IL PICCOLO TUK</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_45">«VERO VERISSIMO!»</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_46">LA DILIGENZA DA DODICI POSTI</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_47">IL VECCHIO FANALE</a></li>
+    <li><a href="Text/Section0005.xhtml#heading_id_48">IL ROSPO</a></li>
+  </ul>
+  <li><a href="Text/Section0006.xhtml">Note</a></li>
+</ul>
+"""
     metadata_content_urls = set(["OEBPS/toc.ncx", "OEBPS/Images/copertina.png"])
     manifest_keys = set([
             "ncx", "copertina.png", "e-text.png", "Style0001.css",
@@ -152,3 +211,7 @@ class EpubTest(unittest.TestCase):
     def testEpubEtichette(self):
         book = Epub(self.epub)
         self.assertEqual(book.ncx.html_toc, self.html_toc)
+
+    def testEpubTocHtml(self):
+        book = Epub(self.epub)
+        self.assertEqual(book.ncx.html_href_toc, self.html_href_toc)

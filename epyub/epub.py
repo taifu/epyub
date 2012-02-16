@@ -21,6 +21,17 @@ MEDIA_TYPE_NCX = "application/x-dtbncx+xml"
 MEDIA_TYPE_XHTML = "application/xhtml+xml"
 MEDIA_TYPE_DTBOOK = "application/x-dtbook+xml"
 
+class TocItem(object):
+    def __init__(self, label, url):
+        self.label = label
+        self.url = url
+
+    def __str__(self):
+        return self.label
+
+    def __repr__(self):
+        return self.label
+
 class Item(object):
     def __init__(self, id, url, media_type):
         self.id = id
@@ -96,15 +107,11 @@ class Ncx(object):
     def __init__(self, data):
         self._dom = xml.dom.minidom.parseString(data)
         # Get hierarchical toc in a list of element and/or list etc.
-        def get_text(navPoint):
-            return navPoint.getElementsByTagName("navLabel")[0
-                    ].getElementsByTagName("text")[0
-                    ].childNodes[0].wholeText
         def get_navpoints(father):
             return [element for element in father.childNodes
                     if element.nodeType==element.ELEMENT_NODE and element.tagName=="navPoint"]
         toc_nodes = get_navpoints(self._dom.getElementsByTagName("navMap")[0])
-        self._toc = [get_text(navpoint) for navpoint in toc_nodes]
+        self._toc = [self.tocItemFromNavpoint(navpoint) for navpoint in toc_nodes]
         labels = deque([(toc_nodes, self._toc)])
         while labels:
             current_label, current_toc = labels.popleft()
@@ -113,9 +120,23 @@ class Ncx(object):
                 sons = get_navpoints(node)
                 if sons:
                     current_label[i] = sons
-                    current_toc.insert(i + delta + 1, [get_text(navpoint) for navpoint in sons])
+                    current_toc.insert(i + delta + 1, [self.tocItemFromNavpoint(navpoint) for navpoint in sons])
                     labels.append((current_label[i], current_toc[i + delta + 1]))
                     delta += 1
+
+    def get_text(self, navPoint):
+        return navPoint.getElementsByTagName("navLabel")[0
+                ].getElementsByTagName("text")[0
+                ].childNodes[0].wholeText
+
+    def get_url(self, navPoint):
+        content = navPoint.getElementsByTagName("content")
+        if len(content) > 0:
+            return dict(content[0].attributes.items()).get('src', None)
+        return  None
+
+    def tocItemFromNavpoint(self, navpoint):
+        return TocItem(label=self.get_text(navpoint), url=self.get_url(navpoint))
 
     @property
     def toc(self):
@@ -123,14 +144,25 @@ class Ncx(object):
 
     @property
     def html_toc(self):
-        def explore(labels, level=0):
+        return self._html_toc()
+
+    @property
+    def html_href_toc(self):
+        return self._html_toc(with_href=True)
+
+    def _html_toc(self, with_href=False):
+        def explore(items, level=0):
             indent = level * u"  "
             html = indent + u"<ul{0}>\n".format(u"" if level > 0 else u" class=\"toc\"")
-            for label in labels:
-                if type(label) == types.ListType:
-                    html += explore(label, level+1)
+            for item in items:
+                if type(item) == types.ListType:
+                    html += explore(item, level+1)
                 else:
-                    html += u"{0}<li>{1}</li>\n".format(indent + u"  ", label)
+                    if with_href and item.url:
+                        li = u"<a href=\"{0}\">{1}</a>".format(item.url, item.label)
+                    else:
+                        li = item.label
+                    html += u"{0}<li>{1}</li>\n".format(indent + u"  ", li)
             html += indent + u"</ul>\n"
             return html
         return explore(self.toc)
