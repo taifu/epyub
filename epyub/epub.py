@@ -54,7 +54,7 @@ class Content(object):
     def __init__(self, data):
         self._dom = xml.dom.minidom.parseString(data)
         # Manifest (and urls)
-        manifests = self._dom.getElementsByTagName("manifest")
+        manifests = self._dom.getElementsByTagNameNS("*", "manifest")
         if len(manifests) == 0:
             raise epexc.ManifestMissing()
         elif len(manifests) != 1:
@@ -62,7 +62,7 @@ class Content(object):
         self.manifest = {}
         self.urls_by_id = {}
         self.ncx_item = None
-        for node in manifests[0].getElementsByTagName("item"):
+        for node in manifests[0].getElementsByTagNameNS("*", "item"):
             id = node.getAttribute("id")
             url = OEBPS_PATH + "/" + node.getAttribute("href")
             media_type = node.getAttribute("media-type")
@@ -71,17 +71,17 @@ class Content(object):
             if media_type == MEDIA_TYPE_NCX:
                 self.ncx_item = self.manifest[id]
         # Spine
-        spines = self._dom.getElementsByTagName("spine")
+        spines = self._dom.getElementsByTagNameNS("*", "spine")
         if len(spines) == 0:
             raise epexc.SpineMissing()
         elif len(spines) != 1:
             raise epexc.MoreThanOneSpine("{0} spines".format(len(spines)))
         self.spine = tuple(node.getAttribute("idref")
-                for node in spines[0].getElementsByTagName("itemref"))
+                for node in spines[0].getElementsByTagNameNS("*", "itemref"))
         # Metadata
         self.metadata_content_urls = set([self.ncx_item.url])
         try:
-            metadata = self._dom.getElementsByTagName("metadata")[0]
+            metadata = self._dom.getElementsByTagNameNS("*", "metadata")[0]
             for node in metadata.childNodes:
                 # Content used in metadata
                 if node.nodeType == node.ELEMENT_NODE and node.getAttribute("name") == "cover":
@@ -97,13 +97,13 @@ class Ncx(object):
         self._dom = xml.dom.minidom.parseString(data)
         # Get hierarchical toc in a list of element and/or list etc.
         def get_text(navPoint):
-            return navPoint.getElementsByTagName("navLabel")[0
-                    ].getElementsByTagName("text")[0
+            return navPoint.getElementsByTagNameNS("*", "navLabel")[0
+                    ].getElementsByTagNameNS("*", "text")[0
                     ].childNodes[0].wholeText
         def get_navpoints(father):
             return [element for element in father.childNodes
                     if element.nodeType==element.ELEMENT_NODE and element.tagName=="navPoint"]
-        toc_nodes = get_navpoints(self._dom.getElementsByTagName("navMap")[0])
+        toc_nodes = get_navpoints(self._dom.getElementsByTagNameNS("*", "navMap")[0])
         self._toc = [get_text(navpoint) for navpoint in toc_nodes]
         labels = deque([(toc_nodes, self._toc)])
         while labels:
@@ -280,7 +280,7 @@ class Epub(object):
                 if url == self.content_filename:
                     dom = xml.dom.minidom.parseString(data)
                     # Process content manifest
-                    for item in dom.getElementsByTagName("manifest")[0].getElementsByTagName("item"):
+                    for item in dom.getElementsByTagNameNS("*", "manifest")[0].getElementsByTagNameNS("*", "item"):
                         url = absolutize_url(item.getAttribute("href"), parent_path_parts)
                         if url in urls_to_be_removed:
                             try:
@@ -288,7 +288,7 @@ class Epub(object):
                             except xml.dom.NotFoundErr:
                                 pass
                     # Process content spine
-                    for itemref in dom.getElementsByTagName("spine")[0].getElementsByTagName("itemref"):
+                    for itemref in dom.getElementsByTagNameNS("*", "spine")[0].getElementsByTagNameNS("*", "itemref"):
                         url = self.content.manifest[itemref.getAttribute("idref")].url
                         if url in urls_to_be_removed:
                             try:
@@ -301,7 +301,7 @@ class Epub(object):
                     if item == self.content.ncx_item:
                         # Process toc
                         dom = xml.dom.minidom.parseString(data)
-                        for navPoint in dom.getElementsByTagName("navPoint"):
+                        for navPoint in dom.getElementsByTagNameNS("*", "navPoint"):
                             for node in navPoint.childNodes:
                                 if node.nodeType == node.ELEMENT_NODE and node.nodeName == "content":
                                     url = absolutize_url(node.getAttribute("src"), parent_path_parts)
@@ -310,7 +310,7 @@ class Epub(object):
                                             navPoint.parentNode.removeChild(navPoint)
                                         except xml.dom.NotFoundErr:
                                             pass
-                        for cont, navPoint in enumerate(dom.getElementsByTagName("navPoint")):
+                        for cont, navPoint in enumerate(dom.getElementsByTagNameNS("*", "navPoint")):
                             playOrder = navPoint.getAttribute("playOrder")
                             if playOrder != str(cont + 1):
                                 playOrder = navPoint.setAttribute("playOrder", str(cont + 1))
@@ -320,7 +320,7 @@ class Epub(object):
                         dom = xml.dom.minidom.parseString(data)
                         parent_path_parts = url.split("/")[:-1]
                         for tagname, attr in (("content", "src"), ("img", "src"), ("link", "href"), ("a", "href")):
-                            for node in dom.getElementsByTagName(tagname):
+                            for node in dom.getElementsByTagNameNS("*", tagname):
                                 if node.nodeType == node.ELEMENT_NODE:
                                     url = absolutize_url(node.getAttribute(attr), parent_path_parts)
                                     if url in urls_to_be_removed:
