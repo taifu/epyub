@@ -79,6 +79,7 @@ class Content(object):
         self.spine = tuple(node.getAttribute("idref")
                 for node in spines[0].getElementsByTagNameNS("*", "itemref"))
         # Metadata
+        self.cover_url = None
         self.metadata_content_urls = set([self.ncx_item.url])
         try:
             metadata = self._dom.getElementsByTagNameNS("*", "metadata")[0]
@@ -87,7 +88,8 @@ class Content(object):
                 if node.nodeType == node.ELEMENT_NODE and node.getAttribute("name") == "cover":
                     id = node.getAttribute("content")
                     if id:
-                        self.metadata_content_urls.add(self.manifest[id].url)
+                        self.cover_url = self.manifest[id].url
+                        self.metadata_content_urls.add(self.cover_url)
         except IndexError:
             raise epexc.MetadataMissing()
 
