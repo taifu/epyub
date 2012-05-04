@@ -51,7 +51,7 @@ class Container(object):
 
 class Content(object):
     """ Content file ( usually OEBPS/content.opf ) """
-    def __init__(self, data):
+    def __init__(self, data, file_url='OEBPS/content.opf'):
         self._dom = xml.dom.minidom.parseString(data)
         # Manifest (and urls)
         manifests = self._dom.getElementsByTagNameNS("*", "manifest")
@@ -62,9 +62,10 @@ class Content(object):
         self.manifest = {}
         self.urls_by_id = {}
         self.ncx_item = None
+        parent_path_parts = file_url.split("/")[:-1]
         for node in manifests[0].getElementsByTagNameNS("*", "item"):
             id = node.getAttribute("id")
-            url = OEBPS_PATH + "/" + node.getAttribute("href")
+            url = absolutize_url(node.getAttribute("href"), parent_path_parts)
             media_type = node.getAttribute("media-type")
             self.manifest[id] = Item(id, url, media_type)
             self.urls_by_id[url] = id
@@ -196,7 +197,7 @@ class Epub(object):
         if self._filename:
             self._zipfile = ZipFile(self._filename)
             self.container = Container(self._zipfile.read(CONTAINER_NAME))
-            self.content = Content(self._zipfile.read(self.content_filename))
+            self.content = Content(self._zipfile.read(self.content_filename), file_url=self.content_filename)
             self.ncx = Ncx(self._zipfile.read(self.content.ncx_item.url))
             # Harvest URLs from parsable files
             self.urls_used_into_id = {}
