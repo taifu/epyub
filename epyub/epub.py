@@ -89,6 +89,8 @@ class Content(object):
                 if node.nodeType == node.ELEMENT_NODE and node.getAttribute("name") == "cover":
                     id = node.getAttribute("content")
                     if id:
+                        if not id in self.manifest:
+                            raise epexc.BadManifestIdentifier(id)
                         self.cover_url = self.manifest[id].url
                         self.metadata_content_urls.add(self.cover_url)
         except IndexError:
