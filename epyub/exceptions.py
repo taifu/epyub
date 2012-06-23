@@ -52,9 +52,3 @@ class PreviewAlreadyExists(Exception):
     "Preview filename already exists"
     pass
 
-class BadManifestIdentifier(Exception):
-    "The identifier indicated is not present in the manifest"
-    def __init__(self, identifier):
-        self.identifier = identifier
-        Exception.__init__(self, "Identifier '%s' not found in manifest" % identifier)
-
