@@ -210,7 +210,10 @@ class Epub(object):
                         urls = set()
                         if item.parsable():
                             parser = URLLister(parent_path=url)
-                            parser.feed(data)
+                            try:
+                                parser.feed(data)
+                            except UnicodeDecodeError:
+                                continue
                             for url_found in parser.urls:
                                 urls.add(url_found)
                         self.urls_used_into_id[item.id] = urls
