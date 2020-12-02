@@ -1,8 +1,5 @@
-syntax: glob
 *.pyc
 *~
 *.swp
 nohup.out
 tests/epub/tmp_epub.epub
-
-syntax: regexp
